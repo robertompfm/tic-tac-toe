@@ -8,15 +8,10 @@ section {
   align-items: center;
   justify-content: center;
   width: 100vw;
-}
-
-.header,
-.score-area {
-  height: 15vh;
-}
-
-.button-area {
-  align-items: flex-start;
+  height: 10vh;
+  border: solid 1px;
+  flex-direction: row;
+  flex-wrap: wrap;
 }
 
 .game-area {

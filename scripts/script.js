@@ -1,37 +1,35 @@
-const PLAYERS_ID = [0, 1]
-const PLAYERS_MARKS = ["O", "X"]
-
-const GAME_AREA = document.querySelector(".game-area");
-
 function removeAllElementsChild(element) {
   while (element.firstChild) {
     element.removeChild(element.lastChild);
   }
 }
 
-const Player = (id, mark) => {
+const Player = (id, mark, name, scoreElement, nameElement) => {
   let score = 0;
 
-  const increaseScore = () => {};
-  return { id, mark, score }
+  const increaseScore = () => {
+    score++;
+  };
+
+  const getScore = () => score;
+
+  const render = () => {
+    scoreElement.textContent = score;
+    nameElement.textContent = name;
+  }
+  
+  return { id, mark, getScore, increaseScore, render };
 }
 
 
-const Gameboard = (() => {
-  // const CLEAN_BOARD = [
-  //   ["", "", ""],
-  //   ["", "", ""],
-  //   ["", "", ""],
-  // ];
-
+const Gameboard = () => {
   const CLEAN_BOARD = [
-  ["O", "", "X"],
-  ["X", "O", ""],
-  ["", "", "O"],
+    ["", "", ""],
+    ["", "", ""],
+    ["", "", ""],
   ];
-
   
-  let board = CLEAN_BOARD;
+  let board = JSON.parse(JSON.stringify(CLEAN_BOARD));
 
   const didWin = (player) => {
     const diagOne = [board[0][0], board[1][1], board[2][2]];
@@ -75,7 +73,7 @@ const Gameboard = (() => {
   }
 
   const resetBoard = () => {
-    board = CLEAN_BOARD;
+    board = JSON.parse(JSON.stringify(CLEAN_BOARD));
   }
 
   const render = (gameArea) => {
@@ -91,7 +89,6 @@ const Gameboard = (() => {
         cell.classList.add(`cell--${i}${j}`);
         if (j === 1) cell.classList.add("board--cc");
         if (i === 1) cell.classList.add("board--cr");
-        if (!board[i][j]) cell.classList.add("selectable");
         cell.textContent = board[i][j];
         boardElement.appendChild(cell);
       }
@@ -108,14 +105,108 @@ const Gameboard = (() => {
   }
 
   return { didWin, isComplete, resetBoard, render, makeMove }
+};
+
+
+const displaycontroller = (() => {
+  const PLAYERS_ID = [0, 1]
+  const PLAYERS_MARKS = ["O", "X"]
+  const GAME_AREA = document.querySelector(".game-area");
+  const NEW_GAME = document.querySelector(".btn-new-game");
+  const BOARD_SIZE = 3;
+  const DEFAULT_NAME_ONE = "Player 1";
+  const DEFAULT_NAME_TWO = "Player 2";
+  const SCORE_PLAYER_ONE_EL = document.querySelector(".p1-score");
+  const SCORE_PLAYER_TWO_EL = document.querySelector(".p2-score");
+  const NAME_PLAYER_ONE_EL = document.querySelector(".p1-name");
+  const NAME_PLAYER_TWO_EL = document.querySelector(".p2-name");
+
+  let playerOne = Player(
+    PLAYERS_ID[0], 
+    PLAYERS_MARKS[0],
+    DEFAULT_NAME_ONE,
+    SCORE_PLAYER_ONE_EL,
+    NAME_PLAYER_ONE_EL,  
+  );
+  let playerTwo = Player(
+    PLAYERS_ID[1], 
+    PLAYERS_MARKS[1],
+    DEFAULT_NAME_TWO,
+    SCORE_PLAYER_TWO_EL,
+    NAME_PLAYER_TWO_EL,
+  );
+  let players = [playerOne, playerTwo];
+  let currentPlayerId = playerOne.id;
+  const gameboard = Gameboard();
+
+  const isGameOver = () => {
+    return gameboard.isComplete() || 
+      gameboard.didWin(playerOne) || 
+      gameboard.didWin(playerTwo);
+  }
+
+  const updateScores = () => {
+    for (let i = 0; i < players.length; i++) {
+      if (gameboard.didWin(players[i])) {
+        players[i].increaseScore();
+      }
+    }
+  }
+
+  const renderScores = () => {
+    for (let i = 0; i < players.length; i++) {
+      players[i].render();
+    }
+  }
+
+  const newGame = () => {
+    renderScores();
+    gameboard.resetBoard();
+    gameboard.render(GAME_AREA);
+    updateSelectFunctions();
+  }
+
+  const start = () => {
+    NEW_GAME.addEventListener("click", newGame);
+    newGame();
+  }
+
+  const select = (row, col) => {
+    return () => {
+      gameboard.makeMove(players[currentPlayerId], row, col);
+      switchPlayers();
+      gameboard.render(GAME_AREA);
+      if (!isGameOver()) {
+        updateSelectFunctions();
+      } else {
+        updateScores();
+        renderScores();
+      }
+    }
+  }
+
+  const updateSelectFunctions = () => {
+    for (let i = 0; i < BOARD_SIZE; i++) {
+      for (let j = 0; j < BOARD_SIZE; j++) {
+        const cell = document.querySelector(`.cell--${i}${j}`);
+        if (!cell.textContent) {
+          cell.classList.add("selectable");
+          cell.addEventListener("click", select(i, j));
+        }
+      }
+    }
+  }
+
+  const switchPlayers = () => {
+    currentPlayerId = (currentPlayerId + 1) % 2;
+  }
+
+  const test = () => {
+    gameboard.makeMove(playerOne, 2, 0);
+    gameboard.makeMove(playerTwo, 1, 1);
+    gameboard.render(GAME_AREA);
+  }
+  return { test, start };
 })();
 
-// const gameboard = Gameboard(testBoard);
-
-const player = Player(0, "O");
-const win = Gameboard.didWin(player);
-const complete = Gameboard.isComplete();
-console.log({win});
-console.log({complete});
-Gameboard.makeMove(player, 2, 0);
-Gameboard.render(GAME_AREA);
+displaycontroller.start();
