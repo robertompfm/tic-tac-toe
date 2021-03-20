@@ -17,8 +17,12 @@ const Player = (id, mark, name, scoreElement, nameElement) => {
     scoreElement.textContent = score;
     nameElement.textContent = name;
   }
+
+  const resetScore = () => {
+    score = 0;
+  }
   
-  return { id, mark, getScore, increaseScore, render };
+  return { id, mark, name, getScore, increaseScore, render, resetScore };
 }
 
 
@@ -107,12 +111,53 @@ const Gameboard = () => {
   return { didWin, isComplete, resetBoard, render, makeMove }
 };
 
+const messageController = (() => {
+  const FEEDBACK_EL = document.querySelector(".feedback");
+  
+  const showWinMessage = (player) => {
+    FEEDBACK_EL.textContent = `${player.name} win!`;
+  }
+
+  const showTieMessage = () => {
+    FEEDBACK_EL.textContent = `It's a tie!`;
+  }
+
+  const removeMessage = () => {
+    FEEDBACK_EL.textContent = "";
+  }
+
+  return { showWinMessage, showTieMessage, removeMessage };
+})();
+
+const optionsController = (() => {
+  const OPTIONS_DIALOG_EL = document.querySelector(".options");
+  const SETTINGS_EL = document.querySelector(".settings");
+  const CLOSE_EL = document.querySelector(".options__close");
+  
+  const openOptionsDialog = () => {
+    OPTIONS_DIALOG_EL.style.display = "block";
+  }
+  
+  const closeOptionsDialog = () => {
+    OPTIONS_DIALOG_EL.style.display = "none";
+  }
+
+  const addOptionsEventListeners = () => {
+    SETTINGS_EL.addEventListener("click", openOptionsDialog);
+    CLOSE_EL.addEventListener("click", closeOptionsDialog);
+  }
+
+  return { addOptionsEventListeners };
+})();
+
+
 
 const displaycontroller = (() => {
   const PLAYERS_ID = [0, 1]
   const PLAYERS_MARKS = ["O", "X"]
   const GAME_AREA = document.querySelector(".game-area");
-  const NEW_GAME = document.querySelector(".btn-new-game");
+  const NEW_GAME_BTN = document.querySelector(".btn-new-game");
+  const RESET_SCORES_BTN = document.querySelector(".btn-reset-scores");
   const BOARD_SIZE = 3;
   const DEFAULT_NAME_ONE = "Player 1";
   const DEFAULT_NAME_TWO = "Player 2";
@@ -149,8 +194,11 @@ const displaycontroller = (() => {
     for (let i = 0; i < players.length; i++) {
       if (gameboard.didWin(players[i])) {
         players[i].increaseScore();
+        messageController.showWinMessage(players[i]);
+        return;
       }
     }
+    messageController.showTieMessage();
   }
 
   const renderScores = () => {
@@ -163,11 +211,26 @@ const displaycontroller = (() => {
     renderScores();
     gameboard.resetBoard();
     gameboard.render(GAME_AREA);
+    messageController.removeMessage();
     updateSelectFunctions();
   }
 
+  const resetScores = () => {
+    for (let i = 0; i < players.length; i++) {
+      players[i].resetScore();
+      players[i].render();
+    }
+    newGame();
+  }
+
+  const openOptionsDialog = () => {
+    OPTIONS_DIALOG_EL.display
+  }
+
   const start = () => {
-    NEW_GAME.addEventListener("click", newGame);
+    NEW_GAME_BTN.addEventListener("click", newGame);
+    RESET_SCORES_BTN.addEventListener("click", resetScores);
+    optionsController.addOptionsEventListeners();
     newGame();
   }
 

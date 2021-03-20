@@ -24,10 +24,20 @@
       </div>
     </div>
     <div class="title-area">
-      <h1>Tic-Tac-Toe</h1>
+      <h1 class="title">Tic-Tac-Toe</h1>
+      <p class="author">
+        by 
+        <a 
+          href="https://github.com/robertompfm" target="blank"
+        >
+          robertompfm
+        </a>
+      </p>
     </div>
     <div class="settings-area">
-
+      <div class="settings">
+        <i class="fas fa-cog"></i>
+      </div>
     </div>
   </header>
   <section class="game-area">
@@ -49,13 +59,36 @@
     </p>
   </section>
   <section class="button-area">
-    <button class="btn btn-reset-score">
-      Reset Score
+    <button class="btn btn-reset-scores">
+      Reset Scores
     </button>
     <button class="btn btn-new-game">
       New Game
     </button>
   </section>
+  <div class="options">
+    <div class="options__window">
+      <h2 class="options__title">Settings</h2>
+      <form class="options__form" action="">
+        <label for="p1-name-inpt">Player name (O):</label>
+        <input type="text" id="p1-name-inpt">
+        <label for="p2-name-inpt">Player name (X):</label>
+        <input type="text" id="p2-name-inpt">
+        <div>
+          <input type="checkbox" id="computer-checkbox">
+          <label for="computer-checkbox">Play against computer</label>
+        </div>
+      </form>
+      <p class="options__feedback">Feedback message</p>
+      <div class="button-area">
+        <button class="btn btn--red">Cancel</button>
+        <button class="btn">Save</button>
+      </div>
+      <div class="options__close">
+        <i class="fa fa-close"></i>
+      </div>
+    </div>
+  </div>
   <script src="scripts/script.js"></script>
 </body>
 </html>

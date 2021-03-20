@@ -4,9 +4,15 @@
   align-items: center;
 }
 
-.title-area {
-  font-size: 5rem;
+.title {
+  font-size: 4rem;
   border: 1px solid;
+}
+
+.author {
+  font-size: 2rem;
+  border: 1px solid;
+  text-align: center;
 }
 
 .score-area,
@@ -43,5 +49,19 @@
       margin-left: 1rem;
       margin-right: 1rem;
     }
+  }
+}
+
+.settings {
+  font-size: 3rem;
+  margin-right: 4rem;
+  cursor: pointer;
+  &:hover {
+    transform: scale(1.2) rotate(180deg);
+    transition: 0.4s;
+  }
+  &:active {
+    transform: scale(1) rotate(180deg);
+    transition: 0.1s;
   }
 }

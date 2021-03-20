@@ -1,0 +1,28 @@
+.btn {
+  padding: 1rem;
+  margin: 0 1rem;
+  background-color: $color-blue;
+  color: $color-white;
+  font-size: 1.6rem;
+  height: 3.8rem;
+  min-width: 12rem;
+  border: solid 1px $color-grey-dark-2;
+  border-radius: .4rem;
+  cursor: pointer;
+
+  &:hover {
+    opacity: .9;
+  }
+
+  &:active {
+    transform: translateY(.1rem);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &--red {
+    background-color: $color-red;
+  }
+} 

@@ -6,8 +6,10 @@
 
 @import "layout/layout";
 
-@import "pages/home";
-
 @import "components/board";
+@import "components/buttons";
+@import "components/options";
 
 @import "abstracts/util";
+
+@import "pages/home";
