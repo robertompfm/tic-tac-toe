@@ -6,6 +6,7 @@ function removeAllElementsChild(element) {
 
 const Player = (id, mark, name, scoreElement, nameElement) => {
   let score = 0;
+  let computer = false;
 
   const increaseScore = () => {
     score++;
@@ -18,11 +19,23 @@ const Player = (id, mark, name, scoreElement, nameElement) => {
     nameElement.textContent = name;
   }
 
+  const changeName = (newName) => {
+    name = newName;
+  }
+
+  const getName = () => name;
+
+  const makeComputer = (isComputer) => {
+    computer = isComputer;
+  }
+
+  const isComputer = () => computer;
+
   const resetScore = () => {
     score = 0;
   }
   
-  return { id, mark, name, getScore, increaseScore, render, resetScore };
+  return { id, mark, getName, isComputer, getScore, increaseScore, render, resetScore, changeName, makeComputer };
 }
 
 
@@ -57,10 +70,10 @@ const Gameboard = () => {
       if (rowStartsWithPlayerMark && rowMarksAreEqual) {
         return true;
       }
-      const col = [board[i][0], board[i][1], board[i][2]];
+      const col = [board[0][i], board[1][i], board[2][i]];
       const colStartsWithPlayerMark = col[0] === player.mark;
       const colMarksAreEqual = col[0] === col[1] && col[1] === col[2];
-      if (rowStartsWithPlayerMark && rowMarksAreEqual) {
+      if (colStartsWithPlayerMark && colMarksAreEqual) {
         return true;
       }
     }
@@ -115,7 +128,7 @@ const messageController = (() => {
   const FEEDBACK_EL = document.querySelector(".feedback");
   
   const showWinMessage = (player) => {
-    FEEDBACK_EL.textContent = `${player.name} win!`;
+    FEEDBACK_EL.textContent = `${player.getName()} win!`;
   }
 
   const showTieMessage = () => {
@@ -129,11 +142,17 @@ const messageController = (() => {
   return { showWinMessage, showTieMessage, removeMessage };
 })();
 
-const optionsController = (() => {
+const OptionsController = (players, restartFunc) => {
   const OPTIONS_DIALOG_EL = document.querySelector(".options");
   const SETTINGS_EL = document.querySelector(".settings");
   const CLOSE_EL = document.querySelector(".options__close");
-  
+  const SAVE_EL = document.querySelector("#save-btn");
+  const CANCEL_EL = document.querySelector("#cancel-btn");
+  const PLAYER_ONE_INPUT_EL = document.querySelector("#p1-name-input");
+  const PLAYER_TWO_INPUT_EL = document.querySelector("#p2-name-input");
+  const COMPUTER_CHECKBOX_EL = document.querySelector("#computer-checkbox");
+  const OPTIONS_FEEDBACK_MSG_EL = document.querySelector(".options__feedback");
+
   const openOptionsDialog = () => {
     OPTIONS_DIALOG_EL.style.display = "block";
   }
@@ -141,14 +160,28 @@ const optionsController = (() => {
   const closeOptionsDialog = () => {
     OPTIONS_DIALOG_EL.style.display = "none";
   }
+  
+    const saveSettings = () => {
+      let playerOneInput = PLAYER_ONE_INPUT_EL.value;
+      let playerTwoInput = PLAYER_TWO_INPUT_EL.value;
+      let isComputer = COMPUTER_CHECKBOX_EL.checked;
+      players[0].changeName(playerOneInput);
+      players[1].changeName(playerTwoInput);
+      players[1].makeComputer(isComputer);
+      closeOptionsDialog();
+      restartFunc();
+    }
 
-  const addOptionsEventListeners = () => {
+  const addEventListeners = () => {
+    OPTIONS_FEEDBACK_MSG_EL.textContent = "";
     SETTINGS_EL.addEventListener("click", openOptionsDialog);
     CLOSE_EL.addEventListener("click", closeOptionsDialog);
+    CANCEL_EL.addEventListener("click", closeOptionsDialog);
+    SAVE_EL.addEventListener("click", saveSettings);
   }
 
-  return { addOptionsEventListeners };
-})();
+  return { addEventListeners };
+};
 
 
 
@@ -183,30 +216,7 @@ const displaycontroller = (() => {
   let players = [playerOne, playerTwo];
   let currentPlayerId = playerOne.id;
   const gameboard = Gameboard();
-
-  const isGameOver = () => {
-    return gameboard.isComplete() || 
-      gameboard.didWin(playerOne) || 
-      gameboard.didWin(playerTwo);
-  }
-
-  const updateScores = () => {
-    for (let i = 0; i < players.length; i++) {
-      if (gameboard.didWin(players[i])) {
-        players[i].increaseScore();
-        messageController.showWinMessage(players[i]);
-        return;
-      }
-    }
-    messageController.showTieMessage();
-  }
-
-  const renderScores = () => {
-    for (let i = 0; i < players.length; i++) {
-      players[i].render();
-    }
-  }
-
+  
   const newGame = () => {
     renderScores();
     gameboard.resetBoard();
@@ -216,21 +226,44 @@ const displaycontroller = (() => {
   }
 
   const resetScores = () => {
+    console.log(players);
     for (let i = 0; i < players.length; i++) {
       players[i].resetScore();
       players[i].render();
     }
     newGame();
   }
-
-  const openOptionsDialog = () => {
-    OPTIONS_DIALOG_EL.display
+  
+  const isGameOver = () => {
+    return gameboard.isComplete() || 
+    gameboard.didWin(playerOne) || 
+    gameboard.didWin(playerTwo);
+  }
+  
+  const updateScores = () => {
+    console.log(players);
+    for (let i = 0; i < players.length; i++) {
+      if (gameboard.didWin(players[i])) {
+        players[i].increaseScore();
+        messageController.showWinMessage(players[i]);
+        return;
+      }
+    }
+    messageController.showTieMessage();
+  }
+  
+  const optionsController = OptionsController(players, resetScores, updateScores);
+  
+  const renderScores = () => {
+    for (let i = 0; i < players.length; i++) {
+      players[i].render();
+    }
   }
 
   const start = () => {
     NEW_GAME_BTN.addEventListener("click", newGame);
     RESET_SCORES_BTN.addEventListener("click", resetScores);
-    optionsController.addOptionsEventListeners();
+    optionsController.addEventListeners();
     newGame();
   }
 
