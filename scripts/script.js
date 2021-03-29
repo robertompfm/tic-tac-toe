@@ -39,15 +39,20 @@ const Player = (id, mark, name, scoreElement, nameElement) => {
 }
 
 
-const Gameboard = () => {
+const Gameboard = (startingBoard=[]) => {
   const CLEAN_BOARD = [
     ["", "", ""],
     ["", "", ""],
     ["", "", ""],
   ];
-  
-  let board = JSON.parse(JSON.stringify(CLEAN_BOARD));
 
+  let board;
+  if (startingBoard.length === 0) {
+    board = JSON.parse(JSON.stringify(CLEAN_BOARD));
+  } else {
+    board = JSON.parse(JSON.stringify(startingBoard));
+  }
+  
   const didWin = (player) => {
     const diagOne = [board[0][0], board[1][1], board[2][2]];
     const diagOneStartsWithPlayerMark = diagOne[0] === player.mark;
@@ -89,6 +94,26 @@ const Gameboard = () => {
     return true;
   }
 
+  const getAvailableOptions = () => {
+    const options = [];
+    for (let i = 0; i < board.length; i++) {
+      for (let j = 0; j < board.length; j++) {
+        if (board[i][j] === "") options.push({ row: i, col:j });
+      }
+    }
+    return options;
+  }
+
+  const printBoard = () => {
+    console.log(`
+      ${board[0][0]}|${board[0][1]}|${board[0][2]}
+      -----
+      ${board[1][0]}|${board[1][1]}|${board[1][2]}
+      -----
+      ${board[2][0]}|${board[2][1]}|${board[2][2]}
+    `)
+  }
+
   const resetBoard = () => {
     board = JSON.parse(JSON.stringify(CLEAN_BOARD));
   }
@@ -121,7 +146,11 @@ const Gameboard = () => {
     }
   }
 
-  return { didWin, isComplete, resetBoard, render, makeMove }
+  const getBoardCopy = () => {
+    return board = JSON.parse(JSON.stringify(board));
+  }
+
+  return { didWin, isComplete, resetBoard, render, makeMove, getAvailableOptions, getBoardCopy, printBoard }
 };
 
 const messageController = (() => {
@@ -161,19 +190,20 @@ const OptionsController = (players, restartFunc) => {
     OPTIONS_DIALOG_EL.style.display = "none";
   }
   
-    const saveSettings = () => {
-      let playerOneInput = PLAYER_ONE_INPUT_EL.value;
-      let playerTwoInput = PLAYER_TWO_INPUT_EL.value;
-      let isComputer = COMPUTER_CHECKBOX_EL.checked;
-      players[0].changeName(playerOneInput);
-      players[1].changeName(playerTwoInput);
-      players[1].makeComputer(isComputer);
-      closeOptionsDialog();
-      restartFunc();
-    }
+  const saveSettings = () => {
+    let playerOneInput = PLAYER_ONE_INPUT_EL.value;
+    let playerTwoInput = PLAYER_TWO_INPUT_EL.value;
+    let isComputer = COMPUTER_CHECKBOX_EL.checked;
+    players[0].changeName(playerOneInput);
+    players[1].changeName(playerTwoInput);
+    players[1].makeComputer(isComputer);
+    closeOptionsDialog();
+    restartFunc();
+  }
 
   const addEventListeners = () => {
     OPTIONS_FEEDBACK_MSG_EL.textContent = "";
+    COMPUTER_CHECKBOX_EL.checked = false;
     SETTINGS_EL.addEventListener("click", openOptionsDialog);
     CLOSE_EL.addEventListener("click", closeOptionsDialog);
     CANCEL_EL.addEventListener("click", closeOptionsDialog);
@@ -182,8 +212,6 @@ const OptionsController = (players, restartFunc) => {
 
   return { addEventListeners };
 };
-
-
 
 const displaycontroller = (() => {
   const PLAYERS_ID = [0, 1]
@@ -198,6 +226,7 @@ const displaycontroller = (() => {
   const SCORE_PLAYER_TWO_EL = document.querySelector(".p2-score");
   const NAME_PLAYER_ONE_EL = document.querySelector(".p1-name");
   const NAME_PLAYER_TWO_EL = document.querySelector(".p2-name");
+  let c = 0;
 
   let playerOne = Player(
     PLAYERS_ID[0], 
@@ -222,11 +251,11 @@ const displaycontroller = (() => {
     gameboard.resetBoard();
     gameboard.render(GAME_AREA);
     messageController.removeMessage();
-    updateSelectFunctions();
+    switchPlayers();
+    updateGame();
   }
 
   const resetScores = () => {
-    console.log(players);
     for (let i = 0; i < players.length; i++) {
       players[i].resetScore();
       players[i].render();
@@ -241,7 +270,6 @@ const displaycontroller = (() => {
   }
   
   const updateScores = () => {
-    console.log(players);
     for (let i = 0; i < players.length; i++) {
       if (gameboard.didWin(players[i])) {
         players[i].increaseScore();
@@ -267,17 +295,67 @@ const displaycontroller = (() => {
     newGame();
   }
 
+  const miniMax = (board, playerId) => {
+    let minmaxGameboard = Gameboard(board);
+    let currentPlayer = players[playerId];
+    let otherPlayerId = (playerId + 1) % 2;
+    let otherPlayer = players[otherPlayerId];
+    if (minmaxGameboard.didWin(currentPlayer)) {
+      return { bestMove: null, bestScore: 1 };
+    }
+    if (minmaxGameboard.didWin(otherPlayer)) {
+      return { bestMove: null, bestScore: -1 };
+    }
+    if (minmaxGameboard.isComplete()) {
+      return { bestMove: null, bestScore: 0 };
+    }
+    let result = { bestMove: null, bestScore: -1 };
+    let options = minmaxGameboard.getAvailableOptions();
+    if (options.length === 9) {
+      return { bestMove: { row: 0, col:0 }, bestScore: 0 }
+    }
+    for (let i = 0; i < options.length; i++) {
+      let option = options[i];
+      let minmaxGameboardCopy = Gameboard(board);
+      minmaxGameboardCopy.makeMove(currentPlayer, option.row, option.col);
+    
+      let moveResult = miniMax(minmaxGameboardCopy.getBoardCopy(), otherPlayerId);
+      moveResult.bestScore *= -1;
+      if (moveResult.bestScore === 1) {
+        return { bestMove: option, bestScore: 1};
+      }
+      if (moveResult.bestScore > result.bestScore || result.bestMove === null) {
+        result = { bestMove: option, bestScore: moveResult.bestScore };
+      }
+    }
+    return result;
+  }
+
   const select = (row, col) => {
     return () => {
       gameboard.makeMove(players[currentPlayerId], row, col);
-      switchPlayers();
-      gameboard.render(GAME_AREA);
-      if (!isGameOver()) {
-        updateSelectFunctions();
-      } else {
-        updateScores();
-        renderScores();
-      }
+      updateGame();
+    }
+  }
+
+  const computerMove = () => {
+    const { bestMove } = miniMax(gameboard.getBoardCopy(), currentPlayerId);
+    gameboard.makeMove(players[currentPlayerId], bestMove.row, bestMove.col);
+      updateGame();
+  }
+
+  const updateGame = () => {
+    gameboard.render(GAME_AREA);
+    switchPlayers();
+    if (isGameOver()) {
+      updateScores();
+      renderScores();
+      return;
+    }
+    if (players[currentPlayerId].isComputer()) {
+      computerMove();
+    } else {
+      updateSelectFunctions();
     }
   }
 

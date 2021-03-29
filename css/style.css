@@ -78,7 +78,6 @@ section {
   justify-content: center;
   width: 100vw;
   height: 10vh;
-  border: solid 1px;
   flex-direction: row;
   flex-wrap: wrap; }
 
@@ -221,18 +220,15 @@ section {
   align-items: center; }
 
 .title {
-  font-size: 4rem;
-  border: 1px solid; }
+  font-size: 4rem; }
 
 .author {
   font-size: 2rem;
-  border: 1px solid;
   text-align: center; }
 
 .score-area,
 .settings-area {
-  width: 30%;
-  border: 1px solid; }
+  width: 30%; }
 
 .score-area {
   display: flex;
