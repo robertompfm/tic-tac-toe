@@ -65,8 +65,12 @@ button {
 .feedback {
   font-size: 3rem; }
 
-a {
-  text-decoration: none; }
+a,
+a:link,
+a:visited,
+a:hover {
+  text-decoration: none;
+  color: #006bd6; }
 
 body {
   background-color: #f7f7f7; }

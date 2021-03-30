@@ -8,6 +8,10 @@ button {
   font-size: 3rem;
 }
 
-a {
+a,
+a:link,
+a:visited,
+a:hover {
   text-decoration: none;
+  color: $color-blue;
 }
